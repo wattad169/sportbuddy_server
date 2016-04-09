@@ -92,3 +92,4 @@ def get_event(request):
 		return HttpResponseBadRequest()
 	event_needed= ndb.Key('event',int(event_id)).get()
 	return HttpResponse(create_response(OK, event_needed.custom_to_dict()))
+#
