@@ -15,6 +15,7 @@
 from django.conf.urls import include, url
 from django.contrib import admin
 from handlers.login import *
+from handlers.events import *
 
 
 
@@ -24,4 +25,9 @@ urlpatterns = [
 	# url(r'^testest/', index_test),
 	url(r'^login/', login_from_client),
 	url(r'^register/', add_user),
+	url(r'^create_event/', create_event),
+	url(r'^get_all_events/', get_all_events),
+	url(r'^get_events_by_user/', get_events_by_user),
+	url(r'^join_event/', join_event),
+	url(r'^get_event/', get_event),
 ]

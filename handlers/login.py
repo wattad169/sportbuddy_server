@@ -34,12 +34,12 @@ def login_from_client(request):
 
 	try:
 		query_result = account.query(ndb.AND(account.username == user_name, account.password == str(hash(password))))
-
 		if (query_result.count() == 0):
 			return HttpResponse(create_response(NOK, result))
 		else:
+			user_exist = query_result.get()
 			#result = generate_token(user_name)
-			return HttpResponse(create_response(OK, result))
+			return HttpResponse(create_response(OK, user_exist.key.id()))
 	except:
 		return HttpResponseServerError()
 
@@ -63,6 +63,8 @@ def add_user(request):
 	# 	return HttpResponseBadRequest()
 	try:
 		new_user = account(username = user_name , password = str(hash(password)))
+
+
 		new_user.put()
 		result = new_user.key.id()
 		return HttpResponse(create_response(OK, result))
