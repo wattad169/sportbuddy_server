@@ -32,9 +32,22 @@ class event(ndb.Model):
 
 
 class account(ndb.Model):
-	username = ndb.StringProperty(required=True)
-	email = ndb.StringProperty()
-	password = ndb.StringProperty(required=True)
+	fullname = ndb.StringProperty(required=True)
+	facebook_id = ndb.StringProperty()
+	google_id = ndb.StringProperty()
+	photo = ndb.BlobProperty(required=True)
+	photo_url = ndb.StringProperty(required=True)
+	email = ndb.StringProperty(required=True)
+	password = ndb.StringProperty()
 	events = ndb.KeyProperty(repeated=True , kind = 'event')
+	def custom_to_dict(self):
+		return {
+			'id': self.key.id(),
+			'events': [key.urlsafe() for key in self.events],
+			'fullname' : self.fullname,
+			'email' : self.email,
+			'photo' : self.photo,
+			'photo_url' : self.photo_url
+		}
 
 

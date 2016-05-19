@@ -15,18 +15,22 @@ def create_event(request):
 		body = json.loads(request.body)
 		result = {}
 		token = body['token']
-		event_name = body['event_name']
-		event_type = body['event_type']
-		event_date = body['event_date']
-		event_location = body['event_location']
-	except:
+		event_name = body['name']
+		event_type = body['type']
+		event_date = body['date']
+		from_time = body['from_time']
+		end_time = body['end_time']
+		event_location = body['location']
+		get_location = body['formatted_location']
 
+	except:
+		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
 		return HttpResponseBadRequest()
 
-	get_location = get_geoaddrees_by_coordinates(event_location['lon'],event_location['lat'])
+	# get_location = get_geoaddrees_by_coordinates(event_location['lon'],event_location['lat'])
 	new_event = event(name=event_name,
 	                  type=event_type,
-	                  date=datetime.datetime.now(),
+	                  date=datetime.datetime.strptime(event_date, '%m/%d/%Y'),
 	                  location=ndb.GeoPt(event_location['lon'], event_location['lat']),
 	                  members =[ndb.Key('account', int(token))],
 	                  created_by = ndb.Key('account', int(token)),
@@ -34,6 +38,7 @@ def create_event(request):
 	                  )
 	#
 	new_event.put()
+	logging.info('%Event added %s',TAG,str(request.body))
 	return HttpResponse(create_response(OK, new_event.custom_to_dict()))
 
 	# except:
@@ -41,11 +46,13 @@ def create_event(request):
 
 @csrf_exempt
 def get_all_events(request):
+	TAG = 'GET_ALL_EVENTS'
 	try:
 		body = json.loads(request.body)
 		result = {}
 		token = body['token']
 	except:
+		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
 		return HttpResponseBadRequest()
 
 	query_result = event.query().fetch()
@@ -53,12 +60,14 @@ def get_all_events(request):
 
 @csrf_exempt
 def get_events_by_user(request):
+	TAG = 'GET_EVENT_BY_USER'
 	try:
 		body = json.loads(request.body)
 		result = {}
 		token = body['token']
 		user_id = body['user_id']
 	except:
+		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
 		return HttpResponseBadRequest()
 
 	user_key = ndb.Key('account',int(user_id))
@@ -68,27 +77,32 @@ def get_events_by_user(request):
 
 @csrf_exempt
 def join_event(request):
+	TAG = 'JOIN_EVENT'
 	try:
 		body = json.loads(request.body)
 		result = {}
 		token = body['token']
 		event_id = body['event_id']
 	except:
+		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
 		return HttpResponseBadRequest()
 	event_to_update = ndb.Key('event',int(event_id)).get()
 	event_to_update.members.append(ndb.Key('account',int(token)))
 	event_to_update.put()
+	logging.info('%sUser %s joined event %s',TAG,token,event_id)
 	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))
 
 
 @csrf_exempt
 def get_event(request):
+	TAG = 'GET_EVENT'
 	try:
 		body = json.loads(request.body)
 		result = {}
 		token = body['token']
 		event_id = body['event_id']
 	except:
+		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
 		return HttpResponseBadRequest()
 	event_needed= ndb.Key('event',int(event_id)).get()
 	return HttpResponse(create_response(OK, event_needed.custom_to_dict()))
