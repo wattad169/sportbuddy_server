@@ -20,8 +20,11 @@ def create_event(request):
 		event_date = body['date']
 		from_time = body['from_time']
 		end_time = body['end_time']
+		description = body['description']
 		event_location = body['location']
 		get_location = body['formatted_location']
+		min_attend = body['minatt']
+		max_attend = body['maxatt']
 
 	except:
 		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
@@ -31,15 +34,20 @@ def create_event(request):
 	new_event = event(name=event_name,
 	                  type=event_type,
 	                  date=datetime.datetime.strptime(event_date, '%m/%d/%Y'),
-	                  location=ndb.GeoPt(event_location['lon'], event_location['lat']),
+	                  location=ndb.GeoPt(event_location['lat'], event_location['lon']),
 	                  members =[ndb.Key('account', int(token))],
 	                  created_by = ndb.Key('account', int(token)),
-	                  formatted_location = get_location
+	                  formatted_location = get_location,
+	                  from_time =from_time,
+	                  end_time = end_time,
+	                  description = description,
+	                  min_attend = min_attend,
+	                  max_attend = max_attend
 	                  )
 	#
 	new_event.put()
-	logging.info('%Event added %s',TAG,str(request.body))
-	return HttpResponse(create_response(OK, new_event.custom_to_dict()))
+	logging.info('%sEvent added %s',TAG,str(request.body))
+	return HttpResponse(create_response(OK, [new_event.custom_to_dict()]))
 
 	# except:
 	# 	return HttpResponseServerError()
@@ -86,9 +94,15 @@ def join_event(request):
 	except:
 		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
 		return HttpResponseBadRequest()
+	# adding the user token to the given event
 	event_to_update = ndb.Key('event',int(event_id)).get()
 	event_to_update.members.append(ndb.Key('account',int(token)))
 	event_to_update.put()
+	# adding the event to the user events
+	user_to_update = ndb.Key('account',int(token)).get()
+	user_to_update.events.append(ndb.Key('event',int(event_id)))
+	user_to_update.put()
+
 	logging.info('%sUser %s joined event %s',TAG,token,event_id)
 	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))
 
@@ -106,4 +120,28 @@ def get_event(request):
 		return HttpResponseBadRequest()
 	event_needed= ndb.Key('event',int(event_id)).get()
 	return HttpResponse(create_response(OK, event_needed.custom_to_dict()))
-#
+
+
+@csrf_exempt
+def get_members_urls(request):
+	# Example: {"token":"5660980839186432","event_id":"5764017373052928"}
+
+	TAG = 'GET_MEMBERS_URLS'
+	try:
+		body = json.loads(request.body)
+		result = {}
+		url_list = []
+		token = body['token']
+		event_id = body['event_id']
+	except:
+		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		return HttpResponseBadRequest()
+	event_in_db = ndb.Key('event',int(event_id)).get()
+	event_members = event_in_db.members
+	logging.info('%s Members_id %s',TAG,event_members)
+	for event_member_key in event_members:
+		event_member = ndb.Key('account',int(event_member_key.id())).get()
+		url_list.append(event_member.photo_url)
+
+
+	return HttpResponse(create_response(OK, url_list))

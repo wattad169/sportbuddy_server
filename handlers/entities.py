@@ -17,17 +17,27 @@ class event(ndb.Model):
 	members = ndb.KeyProperty(repeated=True , kind = 'account')
 	created_by = ndb.KeyProperty(kind = 'account')
 	formatted_location = ndb.StringProperty(required=True)
+	from_time = ndb.StringProperty()
+	end_time = ndb.StringProperty()
+	description = ndb.StringProperty()
+	min_attend = ndb.StringProperty()
+	max_attend = ndb.StringProperty()
 
 	def custom_to_dict(self):
 		return {
 			'id': self.key.id(),
-			'members': [key.urlsafe() for key in self.members],
-			'created_by' : self.created_by.urlsafe(),
+			'members': [key.id() for key in self.members],
+			'created_by' : self.created_by.id(),
 			'location':{'lat': self.location.lat, 'lon': self.location.lon},
 			'formatted_location':self.formatted_location,
 			'name':self.name,
 			'type':self.type,
-			'date':self.date.isoformat()
+			'date':str(self.date.isoformat())[:str(self.date.isoformat()).find('T')],
+			'from_time':self.from_time,
+			'end_time':self.end_time,
+			'description':self.description,
+			'min_attend' : self.min_attend,
+			'max_attend' : self.max_attend
 		}
 
 
@@ -43,7 +53,7 @@ class account(ndb.Model):
 	def custom_to_dict(self):
 		return {
 			'id': self.key.id(),
-			'events': [key.urlsafe() for key in self.events],
+			'events': [key.id() for key in self.events],
 			'fullname' : self.fullname,
 			'email' : self.email,
 			'photo' : self.photo,

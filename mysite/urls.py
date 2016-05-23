@@ -17,6 +17,7 @@ from django.contrib import admin
 from handlers.login import *
 from handlers.events import *
 from handlers.register import *
+from handlers.users import *
 
 
 
@@ -31,4 +32,6 @@ urlpatterns = [
 	url(r'^get_events_by_user/', get_events_by_user),
 	url(r'^join_event/', join_event),
 	url(r'^get_event/', get_event),
+	url(r'^get_members_urls/',get_members_urls),
+	url(r'^get_user_info/',get_user_info)
 ]
