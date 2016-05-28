@@ -33,5 +33,6 @@ urlpatterns = [
 	url(r'^join_event/', join_event),
 	url(r'^get_event/', get_event),
 	url(r'^get_members_urls/',get_members_urls),
-	url(r'^get_user_info/',get_user_info)
+	url(r'^get_user_info/',get_user_info),
+	url(r'^register_for_notifications/',register_for_notifications)
 ]

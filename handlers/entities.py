@@ -50,6 +50,7 @@ class account(ndb.Model):
 	email = ndb.StringProperty(required=True)
 	password = ndb.StringProperty()
 	events = ndb.KeyProperty(repeated=True , kind = 'event')
+	notifications_token = ndb.StringProperty()
 	def custom_to_dict(self):
 		return {
 			'id': self.key.id(),
