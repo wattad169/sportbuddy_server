@@ -107,6 +107,33 @@ def join_event(request):
 	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))
 
 
+
+@csrf_exempt
+def leave_event(request):
+	TAG = 'LEAVE_EVENT'
+	try:
+		body = json.loads(request.body)
+		result = {}
+		token = body['token']
+		event_id = body['event_id']
+	except:
+		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		return HttpResponseBadRequest()
+	# adding the user token to the given event
+	event_to_update = ndb.Key('event',int(event_id)).get()
+	event_to_update.members.delete( ndb.Key('account',int(token)))
+	event_to_update.put()
+	# adding the event to the user events
+	user_to_update = ndb.Key('account',int(token)).get()
+	user_to_update.events.delete(ndb.Key('event',int(event_id)))
+	user_to_update.put()
+
+	logging.info('%sUser %s joined event %s',TAG,token,event_id)
+	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))
+
+
+
+
 @csrf_exempt
 def get_event(request):
 	TAG = 'GET_EVENT'
@@ -124,6 +151,7 @@ def get_event(request):
 
 @csrf_exempt
 def get_members_urls(request):
+	"""return url list """
 	# Example: {"token":"5660980839186432","event_id":"5764017373052928"}
 
 	TAG = 'GET_MEMBERS_URLS'
