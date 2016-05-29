@@ -22,3 +22,20 @@ def get_user_info(request):
 
 	user_in_db = ndb.Key('account',int(user_id)).get()
 	return HttpResponse(create_response(OK, user_in_db.custom_to_dict()))
+
+
+@csrf_exempt
+def register_for_notifications(request):
+	TAG ='register_for_notifications'
+	try:
+		body = json.loads(request.body)
+		result = {}
+		token = body['token']
+		notifications_token = body['notifications_token']
+	except:
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
+		return HttpResponseBadRequest()
+	user_in_db = ndb.Key('account',int(token)).get()
+	user_in_db.notifications_token = notifications_token
+	user_in_db.put()
+	return HttpResponse(create_response(OK, user_in_db.custom_to_dict()))

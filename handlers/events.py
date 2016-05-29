@@ -102,7 +102,17 @@ def join_event(request):
 	user_to_update = ndb.Key('account',int(token)).get()
 	user_to_update.events.append(ndb.Key('event',int(event_id)))
 	user_to_update.put()
-
+	try:
+		created_by_user = event_to_update.created_by.id()
+		created_user= ndb.Key('account',int(created_by_user)).get()
+		notification_token = created_user.notifications_token
+		user_first_name = user_to_update.fullname[:user_to_update.fullname.find("%")]
+		send_notifcation_to_user(notification_token,
+		                         "{0} joined your event!".format(user_first_name),
+		                         "Click here to approve",
+		                         event_to_update.custom_to_dict())
+	except Exception as e:
+		logging.error('%sSending notifcation to user Failed %s',TAG,str(e))
 	logging.info('%sUser %s joined event %s',TAG,token,event_id)
 	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))
 
