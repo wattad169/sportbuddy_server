@@ -131,11 +131,11 @@ def leave_event(request):
 		return HttpResponseBadRequest()
 	# adding the user token to the given event
 	event_to_update = ndb.Key('event',int(event_id)).get()
-	event_to_update.members.delete( ndb.Key('account',int(token)))
+	event_to_update.members.remove( ndb.Key('account',int(token)))
 	event_to_update.put()
 	# adding the event to the user events
 	user_to_update = ndb.Key('account',int(token)).get()
-	user_to_update.events.delete(ndb.Key('event',int(event_id)))
+	user_to_update.events.remove(ndb.Key('event',int(event_id)))
 	user_to_update.put()
 
 	logging.info('%sUser %s joined event %s',TAG,token,event_id)
