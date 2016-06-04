@@ -23,7 +23,9 @@ class event(ndb.Model):
 	min_attend = ndb.StringProperty()
 	max_attend = ndb.StringProperty()
 
+
 	def custom_to_dict(self):
+		"""for event"""
 		return {
 			'id': self.key.id(),
 			'members': [key.id() for key in self.members],
@@ -55,6 +57,11 @@ class account(ndb.Model):
 	createdCount =  ndb.StringProperty()
 
 	def custom_to_dict(self):
+		"""for user"""
+
+		user_key = ndb.Key('account', int(self.key.id()))
+		query_result = event.query(event.members == user_key).fetch()
+
 		return {
 			'id': self.key.id(),
 			'events': [key.id() for key in self.events],
@@ -64,8 +71,7 @@ class account(ndb.Model):
 			'photo_url' : self.photo_url,
 			#add for user profile
 			'createdCount' : self.createdCount,
-			'eventsEntries' : [key.get() for key in self.events ]# i want full entry
-
+			'eventsEntries' : [p.custom_to_dict() for p in query_result] # i want full entry
 		}
 
 
