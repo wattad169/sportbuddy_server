@@ -39,3 +39,17 @@ def register_for_notifications(request):
 	user_in_db.notifications_token = notifications_token
 	user_in_db.put()
 	return HttpResponse(create_response(OK, user_in_db.custom_to_dict()))
+
+@csrf_exempt
+def get_all_users(request):
+	TAG ='get_all_users'
+	try:
+		body = json.loads(request.body)
+		result = {}
+		token = body['token']
+	except:
+		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		return HttpResponseBadRequest()
+
+	query_result = account.query().fetch()
+	return HttpResponse(create_response(OK, [p.custom_to_dict() for p in query_result]))
