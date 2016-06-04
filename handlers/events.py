@@ -117,7 +117,7 @@ def join_event(request):
 	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))
 
 
-
+"""
 @csrf_exempt
 def leave_event(request):
 	TAG = 'LEAVE_EVENT'
@@ -131,7 +131,7 @@ def leave_event(request):
 		return HttpResponseBadRequest()
 	# adding the user token to the given event
 	event_to_update = ndb.Key('event',int(event_id)).get()
-	event_to_update.members.remove( ndb.Key('account',int(token)))
+	event_to_update.members.remove( ndb.Key(re'account',int(token)))
 	event_to_update.put()
 	# adding the event to the user events
 	user_to_update = ndb.Key('account',int(token)).get()
@@ -139,7 +139,7 @@ def leave_event(request):
 	user_to_update.put()
 
 	logging.info('%sUser %s joined event %s',TAG,token,event_id)
-	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))
+	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))"""
 
 
 

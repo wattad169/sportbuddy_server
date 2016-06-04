@@ -51,6 +51,9 @@ class account(ndb.Model):
 	password = ndb.StringProperty()
 	events = ndb.KeyProperty(repeated=True , kind = 'event')
 	notifications_token = ndb.StringProperty()
+	#idan 4.6
+	createdCount =  ndb.StringProperty()
+
 	def custom_to_dict(self):
 		return {
 			'id': self.key.id(),
@@ -58,7 +61,11 @@ class account(ndb.Model):
 			'fullname' : self.fullname,
 			'email' : self.email,
 			'photo' : self.photo,
-			'photo_url' : self.photo_url
+			'photo_url' : self.photo_url,
+			#add for user profile
+			'createdCount' : self.createdCount,
+			'eventsEntries' : [key.get() for key in self.events ]# i want full entry
+
 		}
 
 
