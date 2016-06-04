@@ -53,3 +53,28 @@ def get_all_users(request):
 
 	query_result = account.query().fetch()
 	return HttpResponse(create_response(OK, [p.custom_to_dict() for p in query_result]))
+
+
+
+@csrf_exempt
+def invite_user_to_event(request):
+	TAG = 'invite_user_to_event'
+	try:
+		body = json.loads(request.body)
+		result = {}
+		token = body['token']
+		invitee = body['invitee']
+		event_id = body['event_id']
+	except:
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
+		return HttpResponseBadRequest()
+	inviter = ndb.Key('account', int(token)).get()
+	invitee = ndb.Key('account', int(invitee)).get()
+	event = ndb.Key('event', int(event_id)).get()
+	invitee_first_name = inviter.fullname[:invitee.fullname.find("%")]
+	send_notifcation_to_user(invitee.notifications_token,
+	                         "{0} invited you to join {0}".format(invitee_first_name,event.name),
+	                        "Click here to join the event!",
+	                         event.custom_to_dict()
+	                        )
+	return HttpResponse(create_response(OK, []))
