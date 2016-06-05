@@ -65,7 +65,7 @@ class account(ndb.Model):
 		return {
 			'id': self.key.id(),
 			'events': [key.id() for key in self.events],
-			'fullname' : self.facebook_id, # temporary. (The facebook id is the only name we have right now)
+			'fullname' : self.fullname.replace("%20", " ") ,
 			'email' : self.email,
 			'photo' : self.photo,
 			'photo_url' : self.photo_url,
