@@ -35,5 +35,6 @@ urlpatterns = [
 	url(r'^get_members_urls/',get_members_urls),
 	url(r'^get_user_info/',get_user_info),
 	url(r'^register_for_notifications/',register_for_notifications),
-	url(r'^get_all_users/',get_all_users)
+	url(r'^get_all_users/',get_all_users),
+	url(r'^invite_user_to_event',invite_user_to_event)
 ]
