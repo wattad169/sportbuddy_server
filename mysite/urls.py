@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.conf.urls import include, url
-from django.contrib import admin
-from handlers.login import *
+from django.conf.urls import url
+
 from handlers.events import *
+from handlers.login import *
 from handlers.register import *
 from handlers.users import *
-
-
 
 urlpatterns = [
 	# url(r'^$', index),
@@ -35,5 +33,9 @@ urlpatterns = [
 	url(r'^get_members_urls/',get_members_urls),
 	url(r'^get_user_info/',get_user_info),
 	url(r'^register_for_notifications/',register_for_notifications),
-	url(r'^get_all_users/',get_all_users)
+	url(r'^get_all_users/',get_all_users),
+	url(r'^invite_user_to_event', invite_user_to_event),
+	url(r'^get_user_by_photo/', get_user_by_photo),
+	url(r'get_event_users/', get_event_users),
+	url(r'filter_events/', filter_events)
 ]

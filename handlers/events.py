@@ -1,11 +1,12 @@
-from entities import *
-from django.http import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse, HttpResponseServerError
-from google.appengine.ext import ndb
-from util import *
-from django.views.decorators.csrf import csrf_exempt
-from google.appengine.api import search
 import datetime
 import logging
+
+from django.http import HttpResponseBadRequest, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from entities import *
+from entities import event
+from google.appengine.ext import ndb
+from util import *
 
 
 @csrf_exempt
@@ -46,6 +47,7 @@ def create_event(request):
 	                  )
 	#
 	new_event.put()
+	# add in code: increment createdCount record
 	logging.info('%sEvent added %s',TAG,str(request.body))
 	return HttpResponse(create_response(OK, [new_event.custom_to_dict()]))
 
@@ -180,6 +182,69 @@ def get_members_urls(request):
 	for event_member_key in event_members:
 		event_member = ndb.Key('account',int(event_member_key.id())).get()
 		url_list.append(event_member.photo_url)
-
-
 	return HttpResponse(create_response(OK, url_list))
+
+
+# need to be checked
+@csrf_exempt
+def get_event_users(request):
+	TAG = 'GET_EVENT_USERS'
+	try:
+		body = json.loads(request.body)
+		result = {}
+		user_list = []
+		token = body['token']
+		event_id = body['event_id']
+	except:
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
+		return HttpResponseBadRequest()
+	event_in_db = ndb.Key('event', int(event_id)).get()
+	event_members = event_in_db.members
+	logging.info('%s Members_id %s', TAG, event_members)
+	for event_member_key in event_members:
+		event_member = ndb.Key('account', int(event_member_key.id())).get()
+		user_list.append(event_member.custom_to_dict())
+	return HttpResponse(create_response(OK, user_list))
+
+
+@csrf_exempt
+def filter_events(request):
+	TAG = 'FILTER_EVENTS'
+	logging.error('%s1%s', TAG, str(request.body))
+	try:
+		body = json.loads(request.body)
+		result = {}
+		events_list = []
+		token = body['token']
+		date = body['date']
+		type = body['type']
+		distance = body['distance']
+	except:
+		logging.error('%s2 %s', TAG, str(request.body))
+		return HttpResponseBadRequest()
+	logging.error('%s2.5 %s', TAG, str(request.body))
+
+	events_list = event.query().fetch()
+	if (date != ""):
+		events_list = [event for event in events_list if str(event.date) == date]
+		logging.error('%s3 %s', TAG, str(request.body))
+	if (type != ""):
+		events_list = [event for event in events_list if str(event.type) == type]
+		logging.error('%s4 %s', TAG, str(request.body))
+	return HttpResponse(create_response(OK, [p.custom_to_dict() for p in events_list]))
+
+
+# https://gist.github.com/rochacbruno/2883505
+def distance(origin, destination):
+	lat1, lon1 = origin
+	lat2, lon2 = destination
+	radius = 6371  # km
+
+	dlat = math.radians(lat2 - lat1)
+	dlon = math.radians(lon2 - lon1)
+	a = math.sin(dlat / 2) * math.sin(dlat / 2) + math.cos(math.radians(lat1)) \
+												  * math.cos(math.radians(lat2)) * math.sin(dlon / 2) * math.sin(
+		dlon / 2)
+	c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+	d = radius * c
+	return d
