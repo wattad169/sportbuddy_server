@@ -36,5 +36,9 @@ urlpatterns = [
 	url(r'^get_user_info/',get_user_info),
 	url(r'^register_for_notifications/',register_for_notifications),
 	url(r'^get_all_users/',get_all_users),
-	url(r'^invite_user_to_event',invite_user_to_event)
+	url(r'^invite_user_to_event', invite_user_to_event),
+	url(r'^get_user_by_photo/', get_user_by_photo),
+	url(r'get_event_users/', get_event_users),
+	url(r'filter_events/', filter_events),
+	url(r'leave_event/', leave_event)
 ]
