@@ -119,7 +119,7 @@ def join_event(request):
 	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))
 
 
-"""
+
 @csrf_exempt
 def leave_event(request):
 	TAG = 'LEAVE_EVENT'
@@ -129,20 +129,21 @@ def leave_event(request):
 		token = body['token']
 		event_id = body['event_id']
 	except:
-		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		logging.error('% sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
-	# adding the user token to the given event
-	event_to_update = ndb.Key('event',int(event_id)).get()
-	event_to_update.members.remove( ndb.Key(re'account',int(token)))
-	event_to_update.put()
-	# adding the event to the user events
+	# remove the user token from the given event
+	event_to_remove_from = ndb.Key('event', int(event_id)).get()
+	logging.info('event_to_remove_from = ' + str(event_to_remove_from))
+	event_to_remove_from.members.remove(ndb.Key('account', int(token)))  # remove1?
+	event_to_remove_from.put()  # put?
+	# removing the event from the user events
 	user_to_update = ndb.Key('account',int(token)).get()
-	user_to_update.events.remove(ndb.Key('event',int(event_id)))
-	user_to_update.put()
 
-	logging.info('%sUser %s joined event %s',TAG,token,event_id)
-	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))"""
+	user_to_update.events.remove(ndb.Key('event', int(event_id)))  # remove2?
+	user_to_update.put()  # put?
 
+	logging.info('%sUser %s leaved event %s', TAG, token, event_id)
+	return HttpResponse(create_response(OK, event_to_remove_from.custom_to_dict()))
 
 
 
