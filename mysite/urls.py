@@ -38,5 +38,6 @@ urlpatterns = [
 	url(r'^get_user_by_photo/', get_user_by_photo),
 	url(r'get_event_users/', get_event_users),
 	url(r'filter_events/', filter_events),
-	url(r'leave_event/', leave_event)
+	url(r'leave_event/', leave_event),
+	url(r'cancel_event/', cancel_event)  # need to finish
 ]

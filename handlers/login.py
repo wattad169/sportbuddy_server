@@ -12,16 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.http import HttpResponseForbidden,HttpResponseBadRequest,HttpResponse,HttpResponseServerError
+import logging
+
+from django.http import HttpResponseBadRequest, HttpResponse, HttpResponseServerError
 from django.views.decorators.csrf import csrf_exempt
+from entities import *
 from google.appengine.ext import ndb
 from util import *
-from entities import *
-import logging
 
 
 @csrf_exempt
 def login_from_client(request):
+	"""been used in login class in client side """
 	auth = False
 	TAG = "LOGIN"
 	try:
@@ -64,11 +66,11 @@ def login_from_client(request):
 			else: # Facebook user registered, fetch id
 				new_user = query_result.get()
 		else:
-			logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+			logging.error('%s Received inappropriate request %s', TAG, str(request.body))
 			return HttpResponseBadRequest()
 
 		if(auth):
-			logging.info('%sNew user logged in %s',TAG,str(request.body))
+			logging.info('%s New user logged in %s', TAG, str(request.body))
 			return HttpResponse(create_response(OK, new_user.custom_to_dict()))
 		else:
 			return HttpResponse(create_response(NOK, result))
