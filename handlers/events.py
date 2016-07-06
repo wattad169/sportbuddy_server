@@ -1,11 +1,12 @@
-from entities import *
-from django.http import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse, HttpResponseServerError
-from google.appengine.ext import ndb
-from util import *
-from django.views.decorators.csrf import csrf_exempt
-from google.appengine.api import search
 import datetime
 import logging
+
+from django.http import HttpResponseBadRequest, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from google.appengine.ext import ndb
+
+from entities import *
+from util import *
 
 
 @csrf_exempt
@@ -84,6 +85,33 @@ def get_events_by_user(request):
 
 
 @csrf_exempt
+def filter_events(request):
+	TAG = 'FILTER_EVENTS'
+	logging.error('%s1%s', TAG, str(request.body))
+	try:
+		body = json.loads(request.body)
+		result = {}
+		events_list = []
+		token = body['token']
+		date = body['date']
+		type = body['type']
+		distance = body['distance']
+	except:
+		logging.error('%s2 %s', TAG, str(request.body))
+		return HttpResponseBadRequest()
+	logging.error('%s2.5 %s', TAG, str(request.body))
+
+	events_list = event.query().fetch()
+	if (date != ""):
+		events_list = [event for event in events_list if str(event.date) == date]
+		logging.error('%s3 %s', TAG, str(request.body))
+	if (type != ""):
+		events_list = [event for event in events_list if str(event.type) == type]
+		logging.error('%s4 %s', TAG, str(request.body))
+	return HttpResponse(create_response(OK, [p.custom_to_dict() for p in events_list]))
+
+
+@csrf_exempt
 def join_event(request):
 	TAG = 'JOIN_EVENT'
 	try:
@@ -124,7 +152,7 @@ def leave_event(request):
 	try:
 		body = json.loads(request.body)
 		result = {}
-		token = body['token']
+		token = body['token']  # the token is the user_id
 		event_id = body['event_id']
 	except:
 		logging.error('% sReceived inappropriate request %s', TAG, str(request.body))
@@ -132,8 +160,8 @@ def leave_event(request):
 	# remove the user token from the given event
 	event_to_remove_from = ndb.Key('event', int(event_id)).get()
 	logging.info('event_to_remove_from = ' + str(event_to_remove_from))
-	event_to_remove_from.members.remove(ndb.Key('account', int(token)))  # remove1?
-	event_to_remove_from.put()  # put?
+	event_to_remove_from.members.remove(ndb.Key('account', int(token)))
+	event_to_remove_from.put()  #
 	# removing the event from the user events
 	user_to_update = ndb.Key('account',int(token)).get()
 
@@ -151,15 +179,25 @@ def cancel_event(request):  # need to finish
 	try:
 		body = json.loads(request.body)
 		result = {}
-		token = body['token']
+		token = body['token']  # not relevant
 		event_id = body['event_id']
 	except:
 		logging.error('%s Received inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
 
 	# remove the event from the DB
+	event_to_cancel = ndb.Key('event', int(event_id)).get()
+	logging.info('event_to_cancel = ' + str(event_to_cancel))
+	event_to_cancel.key.delete();
+	logging.info('made event_to_cancel.key.delete()\n' + 'event_to_cancel = ' + str(event_to_cancel))
 
-	# removing the event from all users' events record
+	# removing the event from all users' events record - is it needed? No
+
+	# TODO : FOR MOSTAFA: add here notification to inform that the event canceled.
+
+	logging.info('%s  : %s', TAG, event_id)
+	return HttpResponse(create_response(OK, event_to_cancel.custom_to_dict()))
+
 
 
 

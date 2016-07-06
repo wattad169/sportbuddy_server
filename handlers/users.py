@@ -1,11 +1,11 @@
-from entities import *
-from django.http import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse, HttpResponseServerError
-from google.appengine.ext import ndb
-from util import *
-from django.views.decorators.csrf import csrf_exempt
-from google.appengine.api import search
-import datetime
 import logging
+
+from django.http import HttpResponseBadRequest, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from google.appengine.ext import ndb
+
+from entities import *
+from util import *
 
 
 @csrf_exempt
@@ -78,3 +78,20 @@ def invite_user_to_event(request):
 	                         event.custom_to_dict()
 	                        )
 	return HttpResponse(create_response(OK, []))
+
+
+@csrf_exempt  # need to be checked
+def get_user_by_photo(request):
+	TAG = 'GET_USER_BY_PHOTO'
+	try:
+		body = json.loads(request.body)
+		result = {}
+		query_result = []
+		token = body['token']
+		photo_url = body['photo_url']
+	except:
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
+		return HttpResponseBadRequest()
+
+	query_result = account.query(account.photo_url == photo_url).fetch()
+	return HttpResponse(create_response(OK, query_result[0].custom_to_dict()))
