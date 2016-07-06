@@ -1,6 +1,5 @@
-from google.appengine.ext import ndb
-import json
 from constants import *
+from google.appengine.ext import ndb
 
 
 class Visitor(ndb.Model):
@@ -51,10 +50,16 @@ class account(ndb.Model):
 	photo_url = ndb.StringProperty(required=True)
 	email = ndb.StringProperty(required=True)
 	password = ndb.StringProperty()
-	events = ndb.KeyProperty(repeated=True , kind = 'event')
+	events = ndb.KeyProperty(repeated=True, kind='event')  # accepted events in the future
+	events_edited = ndb.KeyProperty(repeated=True,
+									kind='event')  # events that was edited. (the user would have to approve that he wants to play/ quit )
+	events_wait4approval = ndb.KeyProperty(repeated=True,
+										   kind='event')  # After i join to event, i wait for the creator approval
+	# events_decline  #If the creator decline from user to join event
+	# events_history  #events that the user been part of in the past
+
 	notifications_token = ndb.StringProperty()
-	#idan 4.6
-	createdCount =  ndb.StringProperty()
+	createdCount = ndb.StringProperty(required=True, default="0")
 
 	def custom_to_dict(self):
 		"""for user"""

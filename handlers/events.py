@@ -140,8 +140,28 @@ def leave_event(request):
 	user_to_update.events.remove(ndb.Key('event', int(event_id)))  # remove2?
 	user_to_update.put()  # put?
 
-	logging.info('%sUser %s leaved event %s', TAG, token, event_id)
+	logging.info('%s User %s leaved event %s', TAG, token, event_id)
 	return HttpResponse(create_response(OK, event_to_remove_from.custom_to_dict()))
+
+
+@csrf_exempt
+def cancel_event(request):  # need to finish
+	"""cancel all the event"""
+	TAG = 'CANCEL_EVENT'
+	try:
+		body = json.loads(request.body)
+		result = {}
+		token = body['token']
+		event_id = body['event_id']
+	except:
+		logging.error('%s Received inappropriate request %s', TAG, str(request.body))
+		return HttpResponseBadRequest()
+
+	# remove the event from the DB
+
+	# removing the event from all users' events record
+
+
 
 
 
