@@ -1,5 +1,4 @@
 import datetime
-import logging
 
 from django.http import HttpResponseBadRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -10,7 +9,7 @@ from util import *
 
 
 @csrf_exempt
-def create_event(request):
+def create_event(request):  # Todo 7.7 update according to new DB : 1.is_public
 	TAG = 'CREATE_EVENT: '
 	try:
 		body = json.loads(request.body)
@@ -68,7 +67,7 @@ def get_all_events(request):
 	return HttpResponse(create_response(OK, [p.custom_to_dict() for p in query_result]))
 
 @csrf_exempt
-def get_events_by_user(request):
+def get_events_by_user(request):  #Todo 7.7 update according to new DB
 	TAG = 'GET_EVENT_BY_USER'
 	try:
 		body = json.loads(request.body)
@@ -112,7 +111,7 @@ def filter_events(request):
 
 
 @csrf_exempt
-def join_event(request):
+def join_event(request):  #Todo 7.7 update according to new DB
 	TAG = 'JOIN_EVENT'
 	try:
 		body = json.loads(request.body)

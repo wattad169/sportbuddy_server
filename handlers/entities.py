@@ -1,4 +1,3 @@
-from constants import *
 from google.appengine.ext import ndb
 
 
@@ -21,6 +20,10 @@ class event(ndb.Model):
 	description = ndb.StringProperty()
 	min_attend = ndb.StringProperty()
 	max_attend = ndb.StringProperty()
+	is_public = ndb.StringProperty(required=True,
+								   default="0")  # 0 indicate that the creator don't need to approve join requests
+
+	# 1 indicate that the creator  need to approve join requests
 
 
 	def custom_to_dict(self):
@@ -38,7 +41,8 @@ class event(ndb.Model):
 			'end_time':self.end_time,
 			'description':self.description,
 			'min_attend' : self.min_attend,
-			'max_attend' : self.max_attend
+			'max_attend': self.max_attend,
+			'is_public': self.is_public  # we need to update the client
 		}
 
 
@@ -55,9 +59,9 @@ class account(ndb.Model):
 									kind='event')  # events that was edited. (the user would have to approve that he wants to play/ quit )
 	events_wait4approval = ndb.KeyProperty(repeated=True,
 										   kind='event')  # After i join to event, i wait for the creator approval
-	# events_decline  #If the creator decline from user to join event
-	# events_history  #events that the user been part of in the past
-
+	events_decline = ndb.KeyProperty(repeated=True,
+									 kind='event')  # If the creator decline from user to join event # TODO: mostafa comment for that
+	events_history = ndb.KeyProperty(repeated=True, kind='event')  # events that the user been part of in the past
 	notifications_token = ndb.StringProperty()
 	createdCount = ndb.StringProperty(required=True, default="0")
 
@@ -76,7 +80,11 @@ class account(ndb.Model):
 			'photo_url' : self.photo_url,
 			#add for user profile
 			'createdCount' : self.createdCount,
-			'eventsEntries' : [p.custom_to_dict() for p in query_result] # i want full entry
+			'eventsEntries': [p.custom_to_dict() for p in query_result],  # i want full entry
+			'events_edited': [p.custom_to_dict() for p in query_result],
+			'events_wait4approval': [p.custom_to_dict() for p in query_result],
+			'events_decline': [p.custom_to_dict() for p in query_result],
+			'events_history': [p.custom_to_dict() for p in query_result]
 		}
 
 
