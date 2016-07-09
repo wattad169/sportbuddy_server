@@ -121,23 +121,37 @@ def join_event(request):  #Todo 7.7 update according to new DB
 	except:
 		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
 		return HttpResponseBadRequest()
+
+	# TODO:if  is_public ==0: #(need approval)
+	# add user to the events_wait4aprroval
+	# TNotification TO the creator
+	# the notification move the userid from events_wait4aprroval to events_decline or events
+
+	# if is is_public==1 (regular):
+
 	# adding the user token to the given event
 	event_to_update = ndb.Key('event',int(event_id)).get()
 	event_to_update.members.append(ndb.Key('account',int(token)))
 	event_to_update.put()
 	# adding the event to the user events
-	user_to_update = ndb.Key('account',int(token)).get()
+	user_to_update = ndb.Key('account', int(token)).get()  #retrieve the relevant account entity
 	user_to_update.events.append(ndb.Key('event',int(event_id)))
 	user_to_update.put()
+
+	###idan change temp###################
+	###user_to_update.events_history.append(ndb.Key('event',int(event_id)))
+	###user_to_update.put()
+	#################################
+
 	try:
-		created_by_user = event_to_update.created_by.id()
-		created_user= ndb.Key('account',int(created_by_user)).get()
-		notification_token = created_user.notifications_token
+		created_by_user = event_to_update.created_by.id()  # id of creator
+		created_user = ndb.Key('account', int(created_by_user)).get()  # ta
+		notification_token = created_user.notifications_token  #notification token
 		user_first_name = user_to_update.fullname[:user_to_update.fullname.find("%")]
-		send_notifcation_to_user(notification_token,
-		                         "{0} joined your event!".format(user_first_name),
-		                         "Click here to approve",
-		                         event_to_update.custom_to_dict())
+		send_notifcation_to_user(notification_token,  # send to
+								 "{0} joined your event!".format(user_first_name),  # message
+								 "Click here to approve",  # body
+								 event_to_update.custom_to_dict())  #the tvent that if we click we get into
 	except Exception as e:
 		logging.error('%sSending notifcation to user Failed %s',TAG,str(e))
 	logging.info('%sUser %s joined event %s',TAG,token,event_id)
@@ -157,7 +171,12 @@ def leave_event(request):
 		logging.error('% sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
 	# remove the user token from the given event
+	#check inwhich event Table the user in
 	event_to_remove_from = ndb.Key('event', int(event_id)).get()
+	# event_to_remove_from = ndb.Key('events_edited', int(event_id)).get() Todo : update
+	# event_to_remove_from = ndb.Key('events_wait4approval', int(event_id)).get()
+	#event_to_remove_from = ndb.Key('events_decline', int(event_id)).get()
+
 	logging.info('event_to_remove_from = ' + str(event_to_remove_from))
 	event_to_remove_from.members.remove(ndb.Key('account', int(token)))
 	event_to_remove_from.put()  #
@@ -193,6 +212,7 @@ def cancel_event(request):  # need to finish
 	# removing the event from all users' events record - is it needed? No
 
 	# TODO : FOR MOSTAFA: add here notification to inform that the event canceled.
+
 
 	logging.info('%s  : %s', TAG, event_id)
 	return HttpResponse(create_response(OK, event_to_cancel.custom_to_dict()))

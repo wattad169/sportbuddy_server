@@ -55,6 +55,7 @@ class account(ndb.Model):
 	email = ndb.StringProperty(required=True)
 	password = ndb.StringProperty()
 	events = ndb.KeyProperty(repeated=True, kind='event')  # accepted events in the future
+
 	events_edited = ndb.KeyProperty(repeated=True,
 									kind='event')  # events that was edited. (the user would have to approve that he wants to play/ quit )
 	events_wait4approval = ndb.KeyProperty(repeated=True,
@@ -63,6 +64,7 @@ class account(ndb.Model):
 									 kind='event')  # If the creator decline from user to join event # TODO: mostafa comment for that
 	events_history = ndb.KeyProperty(repeated=True, kind='event')  # events that the user been part of in the past
 	notifications_token = ndb.StringProperty()
+
 	createdCount = ndb.StringProperty(required=True, default="0")
 
 	def custom_to_dict(self):
