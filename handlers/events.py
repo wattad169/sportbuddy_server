@@ -33,7 +33,7 @@ def create_event(request):  # Todo 7.7 update according to new DB : 1.is_public
 	# get_location = get_geoaddrees_by_coordinates(event_location['lon'],event_location['lat'])
 	new_event = event(name=event_name,
 	                  type=event_type,
-	                  date=datetime.datetime.strptime(event_date, '%m/%d/%Y'),
+	                  date=datetime.datetime.strptime(event_date, '%d-%m-%Y'),
 	                  location=ndb.GeoPt(event_location['lat'], event_location['lon']),
 	                  members =[ndb.Key('account', int(token))],
 	                  created_by = ndb.Key('account', int(token)),
@@ -261,3 +261,46 @@ def get_members_urls(request):
 
 
 	return HttpResponse(create_response(OK, url_list))
+
+@csrf_exempt
+def update_event(request):
+	TAG = 'EDIT_EVENT: '
+	try:
+		body = json.loads(request.body)
+		result = {}
+		token = body['token']
+		new_event_name = body['name']
+		new_event_type = body['type']
+		new_event_date = body['date']
+		new_from_time = body['from_time']
+		new_end_time = body['end_time']
+		new_description = body['description']
+		new_event_location = body['location']
+		new_get_location = body['formatted_location']
+		new_min_attend = body['minatt']
+		new_max_attend = body['maxatt']
+		event_id  = body['event_id'] # event id that we need to update
+
+	except:
+		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		return HttpResponseBadRequest()
+	try:
+		updated_event= ndb.Key('event',int(event_id)).get()
+		updated_event.name = new_event_name
+		updated_event.type = new_event_type
+		updated_event.date = datetime.datetime.strptime(new_event_date, '%d-%m-%Y')
+		updated_event.from_time = new_from_time
+		updated_event.end_time = new_end_time
+		updated_event.description = new_description
+		updated_event.location=ndb.GeoPt(new_event_location['lat'], new_event_location['lon'])
+		updated_event.formatted_location = new_get_location
+		updated_event.min_attend = new_min_attend
+		updated_event.max_attend = new_max_attend
+		# I assume we are not allowing changing event public/private
+		updated_event.put()
+		logging.info('%sEvent Updated %s',TAG,str(request.body))
+		return HttpResponse(create_response(OK, [updated_event.custom_to_dict()]))
+	except Exception as e:
+		logging.error('%s\n%s\nError:\n%s',TAG,str(request.body),e)
+
+

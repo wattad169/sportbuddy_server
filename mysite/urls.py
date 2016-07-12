@@ -39,5 +39,7 @@ urlpatterns = [
 	url(r'get_events_by_user/', get_events_by_user),
 	url(r'filter_events/', filter_events),
 	url(r'leave_event/', leave_event),
-	url(r'cancel_event/', cancel_event)  # need to finish
+	url(r'cancel_event/', cancel_event), # need to finish
+	url(r'update_event/', update_event)
+
 ]
