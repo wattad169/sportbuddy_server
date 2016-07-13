@@ -151,17 +151,22 @@ def join_event(request):  #Todo 7.7 update according to new DB
 	###user_to_update.put()
 	#################################
 
-	try:
-		created_by_user = event_to_update.created_by.id()  # id of creator
-		created_user = ndb.Key('account', int(created_by_user)).get()  # ta
-		notification_token = created_user.notifications_token  #notification token
-		user_first_name = user_to_update.fullname[:user_to_update.fullname.find("%")]
-		send_notifcation_to_user(notification_token,  # send to
-								 "{0} joined your event!".format(user_first_name),  # message
-								 "Click here to approve",  # body
-								 event_to_update.custom_to_dict())  #the tvent that if we click we get into
-	except Exception as e:
-		logging.error('%sSending notifcation to user Failed %s',TAG,str(e))
+
+	created_by_user = event_to_update.created_by.id()
+	created_user = ndb.Key('account', int(created_by_user)).get()
+	notification_token = created_user.notifications_token
+	user_first_name = user_to_update.fullname[:user_to_update.fullname.find("%")]
+	send_notifcation_to_user(notification_token,
+							 "{0} joined your event!".format(user_first_name),
+							 "Click here to approve",
+							 event_to_update.custom_to_dict())
+
+	if event_to_update.members_count == int(event_to_update.max_attend): #notify about closed event
+		send_notifcation_to_user(notification_token,
+									 "{0} event is full!".format(event_id.name),
+									 "Click here to view the event",
+									 event_to_update.custom_to_dict())
+
 	logging.info('%sUser %s joined event %s',TAG,token,event_id)
 	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))
 

@@ -1,6 +1,6 @@
 from google.appengine.ext import ndb
-
-
+from constants import *
+import datetime
 class Visitor(ndb.Model):
 	ip = ndb.StringProperty()
 	added_on = ndb.DateTimeProperty(auto_now_add=True)
@@ -22,8 +22,15 @@ class event(ndb.Model):
 	max_attend = ndb.StringProperty()
 	is_public = ndb.StringProperty(required=True,
 								   default="0")  # 0 indicate that the creator don't need to approve join requests
-
 	# 1 indicate that the creator  need to approve join requests
+	status = ndb.StringProperty(required=True,default=OPEN_EVENT)
+	expire_date = ndb.ComputedProperty(lambda self: self.date.replace(hour=int(self.end_time.split(':')[0]),minute = int(self.end_time.split(':')[1])) - datetime.timedelta(hours=3))
+	start_date = ndb.ComputedProperty(lambda self: self.date.replace(hour=int(self.from_time.split(':')[0]),minute = int(self.from_time.split(':')[1])) - datetime.timedelta(hours=3))
+	created_date = ndb.DateTimeProperty(auto_now_add=True)
+	updated_date = ndb.DateTimeProperty(auto_now=True)
+	members_count = ndb.ComputedProperty(lambda self : len(self.members))
+
+
 
 
 	def custom_to_dict(self):
@@ -42,9 +49,11 @@ class event(ndb.Model):
 			'description':self.description,
 			'min_attend' : self.min_attend,
 			'max_attend': self.max_attend,
-			'is_public': self.is_public  # we need to update the client
+			'is_public': self.is_public,  # we need to update the client
+			'created_date' : self.created_date.isoformat(),
+			'updated_date' : self.updated_date.isoformat(),
+			'status' : self.status
 		}
-
 
 class account(ndb.Model):
 	fullname = ndb.StringProperty(required=True)

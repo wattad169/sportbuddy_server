@@ -18,6 +18,7 @@ from handlers.events import *
 from handlers.login import *
 from handlers.register import *
 from handlers.users import *
+from handlers.cron_service import *
 
 urlpatterns = [
 	# url(r'^$', index),
@@ -40,6 +41,10 @@ urlpatterns = [
 	url(r'filter_events/', filter_events),
 	url(r'leave_event/', leave_event),
 	url(r'cancel_event/', cancel_event), # need to finish
-	url(r'update_event/', update_event)
+	url(r'update_event/', update_event),
+	url(r'^cron/event_refresher/',event_refresher),
+	url(r'^cron/update_events_by_scheme/',update_events_by_scheme),
+	url(r'^cron/resolve_kick_of_events/',resolve_kick_of_events)
+
 
 ]

@@ -1,0 +1,9 @@
+cron:
+- description: event_refresher
+  url: /cron/event_refresher/
+  schedule: every 1 minutes
+
+
+- description: resolve_kick_of_events
+  url: /cron/resolve_kick_of_events/
+  schedule: every 45 minutes
