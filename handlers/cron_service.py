@@ -22,7 +22,7 @@ def event_refresher(request):
 def resolve_expired_events():
 	TAG = 'UPDATE_EVENT_STATUS: '
 	now_time = datetime.datetime.now()
-	filtered_events = event.query(event.status == OPEN_EVENT,event.expire_date < now_time)
+	filtered_events = event.query(event.status == LIVE_EVENT,event.expire_date < now_time)
 	filtered_cnt = filtered_events.count()
 	filtered_events_result = filtered_events.fetch()
 	for iter_event in filtered_events_result:
@@ -46,7 +46,7 @@ def resolve_live_events():
 	logging.debug('%s%s live events has been resolved',TAG,filtered_cnt)
 
 @csrf_exempt
-def resolve_kick_of_events():
+def resolve_kick_of_events(request):
 	'''
 	notify the user one hour before the kick off
 	:return:
