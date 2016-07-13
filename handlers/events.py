@@ -25,12 +25,14 @@ def create_event(request):  # Todo 7.7 update according to new DB : 1.is_public
 		get_location = body['formatted_location']
 		min_attend = body['minatt']
 		max_attend = body['maxatt']
+		is_public = body['is_public']
+
 
 	except:
 		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
 		return HttpResponseBadRequest()
 
-	# get_location = get_geoaddrees_by_coordinates(event_location['lon'],event_location['lat'])
+
 	new_event = event(name=event_name,
 	                  type=event_type,
 	                  date=datetime.datetime.strptime(event_date, '%d-%m-%Y'),
@@ -42,10 +44,16 @@ def create_event(request):  # Todo 7.7 update according to new DB : 1.is_public
 	                  end_time = end_time,
 	                  description = description,
 	                  min_attend = min_attend,
-	                  max_attend = max_attend
+	                  max_attend = max_attend,
+	                  is_public = str(is_public)
 	                  )
 	#
-	new_event.put()
+	event_key = new_event.put()
+	# add the event to the user event
+	user_entity = ndb.Key('account',int(token)).get()
+	user_entity.events.append(event_key)
+	user_entity.put()
+
 	logging.info('%sEvent added %s',TAG,str(request.body))
 	return HttpResponse(create_response(OK, [new_event.custom_to_dict()]))
 
