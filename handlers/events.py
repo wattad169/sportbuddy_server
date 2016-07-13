@@ -306,6 +306,15 @@ def update_event(request):
 		updated_event.max_attend = new_max_attend
 		# I assume we are not allowing changing event public/private
 		updated_event.put()
+		# send notifcation to event members that the event has updated
+		for event_member_key in updated_event.members:
+			if int(event_member_key.id()) == token: # don't send notification to event updater
+				continue
+			event_member = ndb.Key('account',int(event_member_key.id())).get()
+			send_notifcation_to_user(event_member.notifications_token,  # send to
+								 "{0} has been updated!".format(updated_event.name),  # message
+								 "Click here to view the event",  # body
+								 updated_event.custom_to_dict())  #the tvent that if we click we get into
 		logging.info('%sEvent Updated %s',TAG,str(request.body))
 		return HttpResponse(create_response(OK, [updated_event.custom_to_dict()]))
 	except Exception as e:
