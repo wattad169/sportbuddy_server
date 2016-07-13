@@ -214,14 +214,21 @@ def cancel_event(request):  # need to finish
 	# remove the event from the DB
 	event_to_cancel = ndb.Key('event', int(event_id)).get()
 	logging.info('event_to_cancel = ' + str(event_to_cancel))
-	event_to_cancel.key.delete();
-	logging.info('made event_to_cancel.key.delete()\n' + 'event_to_cancel = ' + str(event_to_cancel))
 
-	# removing the event from all users' events record - is it needed? No
+	# send notifcation to event members that the event has canceled and delteing from member's event
+	for event_member_key in event_to_cancel.members:
+		if int(event_member_key.id()) == token: # don't send notification to event canceler
+			continue
+		event_member = ndb.Key('account',int(event_member_key.id())).get()
+		send_notifcation_to_user(event_member.notifications_token,  # send to
+							 "{0} has been canceled!".format(event_to_cancel.name),  # message
+							 "" )
+		# deleting the event from member event
+		idx = event_member.events.index(ndb.Key('event',int(event_id)))
+		del event_member.events[idx]
+		event_member.put()
 
-	# TODO : FOR MOSTAFA: add here notification to inform that the event canceled.
-
-
+	event_to_cancel.key.delete()
 	logging.info('%s  : %s', TAG, event_id)
 	return HttpResponse(create_response(OK, event_to_cancel.custom_to_dict()))
 
