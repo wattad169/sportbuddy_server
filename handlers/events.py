@@ -1,5 +1,3 @@
-import datetime
-
 from django.http import HttpResponseBadRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from google.appengine.ext import ndb
@@ -228,11 +226,8 @@ def cancel_event(request):  # need to finish
 		send_notifcation_to_user(event_member.notifications_token,  # send to
 							 "{0} has been canceled!".format(event_to_cancel.name),  # message
 							 "" )
-		# deleting the event from member event
-		idx = event_member.events.index(ndb.Key('event',int(event_id)))
-		del event_member.events[idx]
-		event_member.put()
 
+	# deleting the event from member event - Happens automatically !
 	event_to_cancel.key.delete()
 	logging.info('%s  : %s', TAG, event_id)
 	return HttpResponse(create_response(OK, event_to_cancel.custom_to_dict()))
