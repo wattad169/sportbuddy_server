@@ -7,6 +7,7 @@ from util import *
 
 
 @csrf_exempt
+@login_required
 def create_event(request):  # Todo 7.7 update according to new DB : 1.is_public
 	TAG = 'CREATE_EVENT: '
 	try:
@@ -31,19 +32,19 @@ def create_event(request):  # Todo 7.7 update according to new DB : 1.is_public
 		return HttpResponseBadRequest()
 
 	new_event = event(name=event_name,
-	                  type=event_type,
-	                  date=datetime.datetime.strptime(event_date, '%d-%m-%Y'),
-	                  location=ndb.GeoPt(event_location['lat'], event_location['lon']),
-	                  members=[ndb.Key('account', int(token))],
-	                  created_by=ndb.Key('account', int(token)),
-	                  formatted_location=get_location,
-	                  from_time=from_time,
-	                  end_time=end_time,
-	                  description=description,
-	                  min_attend=min_attend,
-	                  max_attend=max_attend,
-	                  is_public=str(is_public)
-	                  )
+					  type=event_type,
+					  date=datetime.datetime.strptime(event_date, '%d-%m-%Y'),
+					  location=ndb.GeoPt(event_location['lat'], event_location['lon']),
+					  members=[ndb.Key('account', int(token))],
+					  created_by=ndb.Key('account', int(token)),
+					  formatted_location=get_location,
+					  from_time=from_time,
+					  end_time=end_time,
+					  description=description,
+					  min_attend=min_attend,
+					  max_attend=max_attend,
+					  is_public=str(is_public)
+					  )
 	#
 	event_key = new_event.put()
 	# add the event to the user event -not working
@@ -119,6 +120,7 @@ def filter_events(request):
 
 
 @csrf_exempt
+@login_required
 def join_event(request):  # Todo 7.7 update according to new DB
 	TAG = 'JOIN_EVENT'
 	try:
@@ -157,21 +159,22 @@ def join_event(request):  # Todo 7.7 update according to new DB
 	notification_token = created_user.notifications_token
 	user_first_name = user_to_update.fullname[:user_to_update.fullname.find("%")]
 	send_notifcation_to_user(notification_token,
-	                         "{0} joined your event!".format(user_first_name),
-	                         "Click here to see the event..",
-	                         event_to_update.custom_to_dict())
+							 "{0} joined your event!".format(user_first_name),
+							 "Click here to see the event..",
+							 event_to_update.custom_to_dict())
 
 	if event_to_update.members_count == int(event_to_update.max_attend):  # notify about closed event
 		send_notifcation_to_user(notification_token,
-		                         "{0} event is full!".format(event_id.name),
-		                         "Click here to view the event",
-		                         event_to_update.custom_to_dict())
+								 "{0} event is full!".format(event_id.name),
+								 "Click here to view the event",
+								 event_to_update.custom_to_dict())
 
 	logging.info('%sUser %s joined event %s', TAG, token, event_id)
 	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))
 
 
 @csrf_exempt
+@login_required
 def leave_event(request):
 	TAG = 'LEAVE_EVENT'
 	try:
@@ -203,6 +206,7 @@ def leave_event(request):
 
 
 @csrf_exempt
+@login_required
 def cancel_event(request):  # need to finish
 	"""cancel all the event"""
 	TAG = 'CANCEL_EVENT'
@@ -216,24 +220,25 @@ def cancel_event(request):  # need to finish
 		return HttpResponseBadRequest()
 
 	event_to_cancel = ndb.Key('event', int(event_id)).get()
+	#5077991642103808
 
 	# send notifcation to event members that the event has canceled and delteing from member's event
 	for event_member_key in event_to_cancel.members:
 		event_member = ndb.Key('account', int(event_member_key.id())).get()
 
 		needed_fields = [event_member.events, event_member.events_edited,
-		                 event_member.events_wait4approval, event_member.events_decline]
+						 event_member.events_wait4approval, event_member.events_decline]
 		for user_field in needed_fields:
 			key_temp = ndb.Key('event', int(event_id))
 			if key_temp in user_field:
 				idx = user_field.index(key_temp)
-				event_member.events[idx].delete()
+				user_field[idx].delete()
 				event_member.put()
 		if int(event_member_key.id()) == int(token):  # don't send notification to event canceler
 			continue
 		send_notifcation_to_user(event_member.notifications_token,  # send to
-		                         "{0} has been canceled!".format(event_to_cancel.name),  # message
-		                         "")
+								 "{0} has been canceled!".format(event_to_cancel.name),  # message
+								 "")
 
 	# decrement created_count for the creator
 	user_entity = ndb.Key('account', int(token)).get()
@@ -289,6 +294,7 @@ def get_members_urls(request):
 
 
 @csrf_exempt
+@login_required
 def update_event(request):
 	TAG = 'EDIT_EVENT: '
 	try:
@@ -330,10 +336,53 @@ def update_event(request):
 				continue
 			event_member = ndb.Key('account', int(event_member_key.id())).get()
 			send_notifcation_to_user(event_member.notifications_token,  # send to
-			                         "{0} has been updated!".format(updated_event.name),  # message
-			                         "Click here to view the event",  # body
-			                         updated_event.custom_to_dict())  # the tvent that if we click we get into
+									 "{0} has been updated!".format(updated_event.name),  # message
+									 "Click here to view the event",  # body
+									 updated_event.custom_to_dict())  # the tvent that if we click we get into
 		logging.info('%sEvent Updated %s', TAG, str(request.body))
 		return HttpResponse(create_response(OK, [updated_event.custom_to_dict()]))
 	except Exception as e:
 		logging.error('%s\n%s\nError:\n%s', TAG, str(request.body), e)
+
+@csrf_exempt
+@login_required
+def request_join_event(request):
+	TAG = 'EDIT_EVENT:'
+	try:
+		body = json.loads(request.body)
+		token = body['token']
+		event_id = body['event_id']
+	except:
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
+		return HttpResponseBadRequest()
+
+	event_key = ndb.Key('event', int(event_id))
+	user_key = ndb.Key('account', int(token))
+	event_to_update = event_key.get()
+	user_to_update = user_key.get()
+
+	# add event to the waiting_for_approve in under the user
+	if event_key not in user_to_update.events_wait4approval:
+		user_to_update.events_wait4approval.append(event_key)
+
+	# add to the event approve list
+	if user_key not in event_to_update.approve_list:
+		event_to_update.approve_list.append(user_key)
+
+	# send join request to the event boss
+	created_by_user_id = event_to_update.created_by.id()
+	created_user = ndb.Key('account', int(created_by_user_id)).get()
+	notification_token = created_user.notifications_token
+	user_first_name = user_to_update.fullname[:user_to_update.fullname.find("%")]
+	send_notifcation_to_user(notification_token,
+							 "{0} requested to join your event!".format(user_first_name),
+							 "Click here to approve..",
+							 event_to_update.custom_to_dict())
+	user_to_update.put()
+	event_to_update.put()
+	return HttpResponse(create_response(OK, []))
+
+# def resolve_join_request_response()
+
+
+

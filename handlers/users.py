@@ -21,10 +21,12 @@ def get_user_info(request):
 		return HttpResponseBadRequest()
 
 	user_in_db = ndb.Key('account',int(user_id)).get()
+	logging.info('%s %s', TAG, user_in_db.custom_to_dict())
 	return HttpResponse(create_response(OK, user_in_db.custom_to_dict()))
 
 
 @csrf_exempt
+@login_required
 def register_for_notifications(request):
 	TAG ='register_for_notifications'
 	try:
@@ -57,6 +59,7 @@ def get_all_users(request):
 
 
 @csrf_exempt
+@login_required
 def invite_user_to_event(request):
 	TAG = 'invite_user_to_event'
 	try:

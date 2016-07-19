@@ -4,6 +4,9 @@ import urllib2
 import httplib
 import constants
 import logging
+from entities import *
+from google.appengine.ext import ndb
+from django.http import HttpResponseBadRequest, HttpResponse, HttpResponseForbidden
 def to_json(query):
 	return [dict(p.to_dict(exclude=['added_on']), **dict(id=p.key.id())) for p in query]
 
@@ -44,3 +47,22 @@ def send_notifcation_to_user(notifcation_token,title,message,moreParams=None):
 	response = conn.getresponse()
 
 	logging.info('%s Sent data:\n%s\nResponse Status: %s\nResponse msg: %s',TAG,str(body),response.status,response.read())
+
+def login_required(f):
+	def wrapper(*args, **kw):
+		TAG = "LOGIN_REQUIRED: "
+		try:
+			body = json.loads(args[0].body)
+			user_in_db = ndb.Key('account', int(body['token'])).get()
+			# logging.debug("%s%s",TAG,user_in_db.custom_to_dict)
+		except:
+			logging.error('%sReceived inappropriate request %s', TAG, str(args[0].body))
+			return HttpResponseBadRequest()
+		if not user_in_db: # Not a user !
+			return HttpResponseForbidden()
+		else:
+			return f(*args, **kw)
+	return wrapper
+
+
+

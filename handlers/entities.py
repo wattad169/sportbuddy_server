@@ -57,6 +57,7 @@ class event(ndb.Model):
 			'updated_date' : self.updated_date.isoformat(),
 			'status' : self.status,
 			'approve_list': [key.id() for key in self.approve_list]
+
 		}
 
 class account(ndb.Model):
@@ -107,6 +108,7 @@ class account(ndb.Model):
 			'events_wait4approval': [p.get().custom_to_dict() for p in query_events_wait4approval if p.get() != None],
 			'events_decline': [p.get().custom_to_dict() for p in query_events_decline if p.get() != None],
 			'events_history': [p.get().custom_to_dict() for p in query_events_history if p.get() != None]
+
 			# add for user profile
 			# 'favourites' : self.favourites, #Todo
 		}
