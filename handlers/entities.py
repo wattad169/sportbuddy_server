@@ -1,6 +1,8 @@
-from google.appengine.ext import ndb
-from constants import *
 import datetime
+
+from google.appengine.ext import ndb
+
+from constants import *
 class Visitor(ndb.Model):
 	ip = ndb.StringProperty()
 	added_on = ndb.DateTimeProperty(auto_now_add=True)
@@ -75,11 +77,18 @@ class account(ndb.Model):
 	notifications_token = ndb.StringProperty()
 
 	createdCount = ndb.StringProperty(required=True, default="0")
+	favourites = ndb.KeyProperty(repeated=True,
+								 kind='account')  # favourites for the user (watch their events)#todo insert when we create account
 
 	def custom_to_dict(self):
 		"""for user"""
-
 		user_key = ndb.Key('account', int(self.key.id()))
+		user_events = user_key.get().events  # Do 4 each table of events
+		query_events_edited = user_key.get().events_edited
+		query_events_wait4approval = user_key.get().events_wait4approval
+		query_events_decline = user_key.get().events_decline
+		query_events_history = user_key.get().events_history
+		# mostafa
 		query_result = event.query(event.members == user_key).fetch()
 
 		return {
@@ -89,13 +98,15 @@ class account(ndb.Model):
 			'email' : self.email,
 			'photo' : self.photo,
 			'photo_url' : self.photo_url,
-			#add for user profile
-			'createdCount' : self.createdCount,
-			'eventsEntries': [p.custom_to_dict() for p in query_result],  # i want full entry
-			'events_edited': [p.custom_to_dict() for p in query_result],
-			'events_wait4approval': [p.custom_to_dict() for p in query_result],
-			'events_decline': [p.custom_to_dict() for p in query_result],
-			'events_history': [p.custom_to_dict() for p in query_result]
-		}
 
+			'createdCount' : self.createdCount,
+			# 'eventsEntries': [p.custom_to_dict() for p in query_result],  # mostafa
+			'eventsEntries': [p.get().custom_to_dict() for p in user_events if p.get() != None],  # idan
+			'events_edited': [p.get().custom_to_dict() for p in query_events_edited if p.get() != None],
+			'events_wait4approval': [p.get().custom_to_dict() for p in query_events_wait4approval if p.get() != None],
+			'events_decline': [p.get().custom_to_dict() for p in query_events_decline if p.get() != None],
+			'events_history': [p.get().custom_to_dict() for p in query_events_history if p.get() != None]
+			# add for user profile
+			# 'favourites' : self.favourites, #Todo
+		}
 
