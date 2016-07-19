@@ -226,7 +226,7 @@ def cancel_event(request):  # need to finish
 		for user_field in needed_fields:
 			key_temp = ndb.Key('event', int(event_id))
 			if key_temp in user_field:
-				idx = user_field.index()
+				idx = user_field.index(key_temp)
 				event_member.events[idx].delete()
 				event_member.put()
 		if int(event_member_key.id()) == int(token):  # don't send notification to event canceler
