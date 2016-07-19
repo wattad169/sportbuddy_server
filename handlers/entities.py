@@ -31,6 +31,7 @@ class event(ndb.Model):
 	created_date = ndb.DateTimeProperty(auto_now_add=True)
 	updated_date = ndb.DateTimeProperty(auto_now=True)
 	members_count = ndb.ComputedProperty(lambda self : len(self.members))
+	approve_list = ndb.KeyProperty(repeated=True , kind = 'account')
 
 
 
@@ -54,7 +55,8 @@ class event(ndb.Model):
 			'is_public': self.is_public,  # we need to update the client
 			'created_date' : self.created_date.isoformat(),
 			'updated_date' : self.updated_date.isoformat(),
-			'status' : self.status
+			'status' : self.status,
+			'approve_list': [key.id() for key in self.approve_list]
 		}
 
 class account(ndb.Model):
@@ -76,7 +78,7 @@ class account(ndb.Model):
 	events_history = ndb.KeyProperty(repeated=True, kind='event')  # events that the user been part of in the past
 	notifications_token = ndb.StringProperty()
 
-	createdCount = ndb.StringProperty(required=True, default="0")
+	created_count = ndb.StringProperty(required=True, default="0")
 	favourites = ndb.KeyProperty(repeated=True,
 								 kind='account')  # favourites for the user (watch their events)#todo insert when we create account
 
@@ -98,10 +100,9 @@ class account(ndb.Model):
 			'email' : self.email,
 			'photo' : self.photo,
 			'photo_url' : self.photo_url,
-
-			'createdCount' : self.createdCount,
+			'created_count' : self.created_count,
 			# 'eventsEntries': [p.custom_to_dict() for p in query_result],  # mostafa
-			'eventsEntries': [p.get().custom_to_dict() for p in user_events if p.get() != None],  # idan
+			'events_entries': [p.get().custom_to_dict() for p in user_events if p.get() != None],  # idan
 			'events_edited': [p.get().custom_to_dict() for p in query_events_edited if p.get() != None],
 			'events_wait4approval': [p.get().custom_to_dict() for p in query_events_wait4approval if p.get() != None],
 			'events_decline': [p.get().custom_to_dict() for p in query_events_decline if p.get() != None],

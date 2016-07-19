@@ -27,36 +27,37 @@ def create_event(request):  # Todo 7.7 update according to new DB : 1.is_public
 
 
 	except:
-		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
-
 
 	new_event = event(name=event_name,
 	                  type=event_type,
 	                  date=datetime.datetime.strptime(event_date, '%d-%m-%Y'),
 	                  location=ndb.GeoPt(event_location['lat'], event_location['lon']),
-	                  members =[ndb.Key('account', int(token))],
-	                  created_by = ndb.Key('account', int(token)),
-	                  formatted_location = get_location,
-	                  from_time =from_time,
-	                  end_time = end_time,
-	                  description = description,
-	                  min_attend = min_attend,
-	                  max_attend = max_attend,
-	                  is_public = str(is_public)
+	                  members=[ndb.Key('account', int(token))],
+	                  created_by=ndb.Key('account', int(token)),
+	                  formatted_location=get_location,
+	                  from_time=from_time,
+	                  end_time=end_time,
+	                  description=description,
+	                  min_attend=min_attend,
+	                  max_attend=max_attend,
+	                  is_public=str(is_public)
 	                  )
 	#
 	event_key = new_event.put()
 	# add the event to the user event -not working
-	user_entity = ndb.Key('account',int(token)).get()
+	user_entity = ndb.Key('account', int(token)).get()
 	user_entity.events.append(event_key)
+	user_entity.created_count = str(int(user_entity.created_count) + 1)
 	user_entity.put()
 
-	logging.info('%sEvent added %s',TAG,str(request.body))
+	logging.info('%sEvent added %s', TAG, str(request.body))
 	return HttpResponse(create_response(OK, [new_event.custom_to_dict()]))
 
-	# except:
-	# 	return HttpResponseServerError()
+
+# except:
+# 	return HttpResponseServerError()
 
 @csrf_exempt
 def get_all_events(request):
@@ -66,14 +67,15 @@ def get_all_events(request):
 		result = {}
 		token = body['token']
 	except:
-		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
 
 	query_result = event.query().fetch()
 	return HttpResponse(create_response(OK, [p.custom_to_dict() for p in query_result]))
 
+
 @csrf_exempt
-def get_events_by_user(request):  #Todo 7.7 update according to new DB
+def get_events_by_user(request):  # Todo 7.7 update according to new DB
 	TAG = 'GET_EVENT_BY_USER'
 	try:
 		body = json.loads(request.body)
@@ -81,11 +83,11 @@ def get_events_by_user(request):  #Todo 7.7 update according to new DB
 		token = body['token']
 		user_id = body['user_id']
 	except:
-		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
 
-	user_key = ndb.Key('account',int(user_id))
-	query_result = event.query(event.members==user_key).fetch()
+	user_key = ndb.Key('account', int(user_id))
+	query_result = event.query(event.members == user_key).fetch()
 	return HttpResponse(create_response(OK, [p.custom_to_dict() for p in query_result]))
 
 
@@ -117,7 +119,7 @@ def filter_events(request):
 
 
 @csrf_exempt
-def join_event(request):  #Todo 7.7 update according to new DB
+def join_event(request):  # Todo 7.7 update according to new DB
 	TAG = 'JOIN_EVENT'
 	try:
 		body = json.loads(request.body)
@@ -125,7 +127,7 @@ def join_event(request):  #Todo 7.7 update according to new DB
 		token = body['token']
 		event_id = body['event_id']
 	except:
-		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
 
 	# TODO:if  is_public ==0: #(need approval)
@@ -136,12 +138,12 @@ def join_event(request):  #Todo 7.7 update according to new DB
 	# if is is_public==1 (regular):
 
 	# adding the user token to the given event
-	event_to_update = ndb.Key('event',int(event_id)).get()
-	event_to_update.members.append(ndb.Key('account',int(token)))
+	event_to_update = ndb.Key('event', int(event_id)).get()
+	event_to_update.members.append(ndb.Key('account', int(token)))
 	event_to_update.put()
 	# adding the event to the user events
-	user_to_update = ndb.Key('account', int(token)).get()  #retrieve the relevant account entity
-	user_to_update.events.append(ndb.Key('event',int(event_id)))
+	user_to_update = ndb.Key('account', int(token)).get()  # retrieve the relevant account entity
+	user_to_update.events.append(ndb.Key('event', int(event_id)))
 	user_to_update.put()
 
 	###idan change temp###################
@@ -155,19 +157,18 @@ def join_event(request):  #Todo 7.7 update according to new DB
 	notification_token = created_user.notifications_token
 	user_first_name = user_to_update.fullname[:user_to_update.fullname.find("%")]
 	send_notifcation_to_user(notification_token,
-							 "{0} joined your event!".format(user_first_name),
-							 "Click here to approve",
-							 event_to_update.custom_to_dict())
+	                         "{0} joined your event!".format(user_first_name),
+	                         "Click here to see the event..",
+	                         event_to_update.custom_to_dict())
 
-	if event_to_update.members_count == int(event_to_update.max_attend): #notify about closed event
+	if event_to_update.members_count == int(event_to_update.max_attend):  # notify about closed event
 		send_notifcation_to_user(notification_token,
-									 "{0} event is full!".format(event_id.name),
-									 "Click here to view the event",
-									 event_to_update.custom_to_dict())
+		                         "{0} event is full!".format(event_id.name),
+		                         "Click here to view the event",
+		                         event_to_update.custom_to_dict())
 
-	logging.info('%sUser %s joined event %s',TAG,token,event_id)
+	logging.info('%sUser %s joined event %s', TAG, token, event_id)
 	return HttpResponse(create_response(OK, event_to_update.custom_to_dict()))
-
 
 
 @csrf_exempt
@@ -182,17 +183,17 @@ def leave_event(request):
 		logging.error('% sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
 	# remove the user token from the given event
-	#check inwhich event Table the user in
+	# check inwhich event Table the user in
 	event_to_remove_from = ndb.Key('event', int(event_id)).get()
 	# event_to_remove_from = ndb.Key('events_edited', int(event_id)).get() Todo : update
 	# event_to_remove_from = ndb.Key('events_wait4approval', int(event_id)).get()
-	#event_to_remove_from = ndb.Key('events_decline', int(event_id)).get()
+	# event_to_remove_from = ndb.Key('events_decline', int(event_id)).get()
 
 	logging.info('event_to_remove_from = ' + str(event_to_remove_from))
 	event_to_remove_from.members.remove(ndb.Key('account', int(token)))
 	event_to_remove_from.put()  #
 	# removing the event from the user events
-	user_to_update = ndb.Key('account',int(token)).get()
+	user_to_update = ndb.Key('account', int(token)).get()
 
 	user_to_update.events.remove(ndb.Key('event', int(event_id)))  # remove2?
 	user_to_update.put()  # put?
@@ -218,15 +219,26 @@ def cancel_event(request):  # need to finish
 
 	# send notifcation to event members that the event has canceled and delteing from member's event
 	for event_member_key in event_to_cancel.members:
-		if int(event_member_key.id()) == token: # don't send notification to event canceler
+		event_member = ndb.Key('account', int(event_member_key.id())).get()
+
+		needed_fields = [event_member.events, event_member.events_edited,
+		                 event_member.events_wait4approval, event_member.events_decline]
+		for user_field in needed_fields:
+			key_temp = ndb.Key('event', int(event_id))
+			if key_temp in user_field:
+				idx = user_field.index()
+				event_member.events[idx].delete()
+				event_member.put()
+		if int(event_member_key.id()) == int(token):  # don't send notification to event canceler
 			continue
-		event_member = ndb.Key('account',int(event_member_key.id())).get()
 		send_notifcation_to_user(event_member.notifications_token,  # send to
-							 "{0} has been canceled!".format(event_to_cancel.name),  # message
-							 "" )
-	# deleting the event from member event
-	# idx = event_member.events.index(ndb.Key('event', int(event_id)))
-	# event_member.events[idx].delete()
+		                         "{0} has been canceled!".format(event_to_cancel.name),  # message
+		                         "")
+
+	# decrement created_count for the creator
+	user_entity = ndb.Key('account', int(token)).get()
+	user_entity.created_count = str(int(user_entity.created_count) - 1)
+	user_entity.put()
 
 	# remove the event from the DB
 	logging.info('event_to_cancel = ' + str(event_to_cancel))
@@ -234,10 +246,6 @@ def cancel_event(request):  # need to finish
 
 	logging.info('%s  : %s', TAG, event_id)
 	return HttpResponse(create_response(OK, event_to_cancel.custom_to_dict()))
-
-
-
-
 
 
 @csrf_exempt
@@ -249,9 +257,9 @@ def get_event(request):
 		token = body['token']
 		event_id = body['event_id']
 	except:
-		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
-	event_needed= ndb.Key('event',int(event_id)).get()
+	event_needed = ndb.Key('event', int(event_id)).get()
 	return HttpResponse(create_response(OK, event_needed.custom_to_dict()))
 
 
@@ -268,17 +276,17 @@ def get_members_urls(request):
 		token = body['token']
 		event_id = body['event_id']
 	except:
-		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
-	event_in_db = ndb.Key('event',int(event_id)).get()
+	event_in_db = ndb.Key('event', int(event_id)).get()
 	event_members = event_in_db.members
-	logging.info('%s Members_id %s',TAG,event_members)
+	logging.info('%s Members_id %s', TAG, event_members)
 	for event_member_key in event_members:
-		event_member = ndb.Key('account',int(event_member_key.id())).get()
+		event_member = ndb.Key('account', int(event_member_key.id())).get()
 		url_list.append(event_member.photo_url)
 
-
 	return HttpResponse(create_response(OK, url_list))
+
 
 @csrf_exempt
 def update_event(request):
@@ -297,20 +305,20 @@ def update_event(request):
 		new_get_location = body['formatted_location']
 		new_min_attend = body['minatt']
 		new_max_attend = body['maxatt']
-		event_id  = body['event_id'] # event id that we need to update
+		event_id = body['event_id']  # event id that we need to update
 
 	except:
-		logging.error('%sReceived inappropriate request %s',TAG,str(request.body))
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
 	try:
-		updated_event= ndb.Key('event',int(event_id)).get()
+		updated_event = ndb.Key('event', int(event_id)).get()
 		updated_event.name = new_event_name
 		updated_event.type = new_event_type
 		updated_event.date = datetime.datetime.strptime(new_event_date, '%d-%m-%Y')
 		updated_event.from_time = new_from_time
 		updated_event.end_time = new_end_time
 		updated_event.description = new_description
-		updated_event.location=ndb.GeoPt(new_event_location['lat'], new_event_location['lon'])
+		updated_event.location = ndb.GeoPt(new_event_location['lat'], new_event_location['lon'])
 		updated_event.formatted_location = new_get_location
 		updated_event.min_attend = new_min_attend
 		updated_event.max_attend = new_max_attend
@@ -318,16 +326,14 @@ def update_event(request):
 		updated_event.put()
 		# send notifcation to event members that the event has updated
 		for event_member_key in updated_event.members:
-			if int(event_member_key.id()) == token: # don't send notification to event updater
+			if int(event_member_key.id()) == token:  # don't send notification to event updater
 				continue
-			event_member = ndb.Key('account',int(event_member_key.id())).get()
+			event_member = ndb.Key('account', int(event_member_key.id())).get()
 			send_notifcation_to_user(event_member.notifications_token,  # send to
-								 "{0} has been updated!".format(updated_event.name),  # message
-								 "Click here to view the event",  # body
-								 updated_event.custom_to_dict())  #the tvent that if we click we get into
-		logging.info('%sEvent Updated %s',TAG,str(request.body))
+			                         "{0} has been updated!".format(updated_event.name),  # message
+			                         "Click here to view the event",  # body
+			                         updated_event.custom_to_dict())  # the tvent that if we click we get into
+		logging.info('%sEvent Updated %s', TAG, str(request.body))
 		return HttpResponse(create_response(OK, [updated_event.custom_to_dict()]))
 	except Exception as e:
-		logging.error('%s\n%s\nError:\n%s',TAG,str(request.body),e)
-
-
+		logging.error('%s\n%s\nError:\n%s', TAG, str(request.body), e)
