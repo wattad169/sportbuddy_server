@@ -69,6 +69,7 @@ def resolve_kick_of_events(request):
 				logging.debug("trying to send notification to user {0} failed\nExcetpions:\n{1}".format(int(event_member_key.id()),e))
 				continue
 	logging.debug('%s%s kick off events has been resolved',TAG,filtered_cnt)
+	return HttpResponse(create_response(OK, []))
 
 
 
