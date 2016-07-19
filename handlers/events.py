@@ -47,7 +47,7 @@ def create_event(request):  # Todo 7.7 update according to new DB : 1.is_public
 	                  )
 	#
 	event_key = new_event.put()
-	# add the event to the user event
+	# add the event to the user event -not working
 	user_entity = ndb.Key('account',int(token)).get()
 	user_entity.events.append(event_key)
 	user_entity.put()
@@ -214,9 +214,7 @@ def cancel_event(request):  # need to finish
 		logging.error('%s Received inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
 
-	# remove the event from the DB
 	event_to_cancel = ndb.Key('event', int(event_id)).get()
-	logging.info('event_to_cancel = ' + str(event_to_cancel))
 
 	# send notifcation to event members that the event has canceled and delteing from member's event
 	for event_member_key in event_to_cancel.members:
@@ -226,9 +224,14 @@ def cancel_event(request):  # need to finish
 		send_notifcation_to_user(event_member.notifications_token,  # send to
 							 "{0} has been canceled!".format(event_to_cancel.name),  # message
 							 "" )
+	# deleting the event from member event
+	# idx = event_member.events.index(ndb.Key('event', int(event_id)))
+	# event_member.events[idx].delete()
 
-	# deleting the event from member event - Happens automatically !
+	# remove the event from the DB
+	logging.info('event_to_cancel = ' + str(event_to_cancel))
 	event_to_cancel.key.delete()
+
 	logging.info('%s  : %s', TAG, event_id)
 	return HttpResponse(create_response(OK, event_to_cancel.custom_to_dict()))
 
