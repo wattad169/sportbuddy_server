@@ -47,7 +47,7 @@ urlpatterns = [
 	url(r'^cron/resolve_kick_of_events/',resolve_kick_of_events),
 	url(r'^request_join_event/', request_join_event),
 	url(r'^add_to_favourites/', add_to_favourites),
-	url(r'^remove_from_favourites/', remove_from_favourites)
+	# url(r'^remove_from_favourites/', remove_from_favourites)
 
 
 ]
