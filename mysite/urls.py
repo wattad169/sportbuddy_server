@@ -14,11 +14,11 @@
 
 from django.conf.urls import url
 
+from handlers.cron_service import *
 from handlers.events import *
 from handlers.login import *
 from handlers.register import *
 from handlers.users import *
-from handlers.cron_service import *
 
 urlpatterns = [
 	# url(r'^$', index),
@@ -45,9 +45,9 @@ urlpatterns = [
 	url(r'^cron/event_refresher/',event_refresher),
 	url(r'^cron/update_events_by_scheme/',update_events_by_scheme),
 	url(r'^cron/resolve_kick_of_events/',resolve_kick_of_events),
-	url(r'^request_join_event/',request_join_event)
-
-
+	url(r'^request_join_event/', request_join_event),
+	url(r'^add_to_favourites/', add_to_favourites),
+	url(r'^remove_from_favourites/', remove_from_favourites)
 
 
 ]

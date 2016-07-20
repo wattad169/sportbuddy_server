@@ -1,10 +1,7 @@
-import logging
-
 from django.http import HttpResponseBadRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from google.appengine.ext import ndb
 
-from entities import *
 from util import *
 
 
@@ -98,3 +95,26 @@ def get_user_by_photo(request):
 
 	query_result = account.query(account.photo_url == photo_url).fetch()
 	return HttpResponse(create_response(OK, query_result[0].custom_to_dict()))
+
+
+@csrf_exempt  # MY ID , friend id
+def add_to_favourites(request):
+	TAG = 'ADD_TO_FAVOURITS'
+	try:
+		body = json.loads(request.body)
+		result = {}
+		my_id = body['token']
+		friend_id = body['friend_id']
+	except:
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
+		return HttpResponseBadRequest()
+	my_account = ndb.Key('account', int(my_id)).get()
+	my_account.favourites.append(ndb.Key('account', int(friend_id)))
+	my_account.put()
+
+	return HttpResponse(create_response(OK, None))  # mostafa what to pit insted None?
+
+
+@csrf_exempt
+def remove_from_favourites(request):
+	pass
