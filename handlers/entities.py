@@ -70,15 +70,12 @@ class account(ndb.Model):
 	password = ndb.StringProperty()
 	events = ndb.KeyProperty(repeated=True, kind='event')  # accepted events in the future
 
-	events_edited = ndb.KeyProperty(repeated=True,
-									kind='event')  # events that was edited. (the user would have to approve that he wants to play/ quit )
+
 	events_wait4approval = ndb.KeyProperty(repeated=True,
 										   kind='event')  # After i join to event, i wait for the creator approval
 	events_decline = ndb.KeyProperty(repeated=True,
 									 kind='event')  # If the creator decline from user to join event # TODO: mostafa comment for that
-	events_history = ndb.KeyProperty(repeated=True, kind='event')  # events that the user been part of in the past
 	notifications_token = ndb.StringProperty()
-
 	created_count = ndb.StringProperty(required=True, default="0")
 	favourites = ndb.KeyProperty(repeated=True,
 								 kind='account')  # favourites for the user (watch their events)#todo insert when we create account
@@ -87,10 +84,8 @@ class account(ndb.Model):
 		"""for user"""
 		user_key = ndb.Key('account', int(self.key.id()))
 		user_events = user_key.get().events  # Do 4 each table of events
-		query_events_edited = user_key.get().events_edited
 		query_events_wait4approval = user_key.get().events_wait4approval
 		query_events_decline = user_key.get().events_decline
-		query_events_history = user_key.get().events_history
 		# mostafa
 		query_result = event.query(event.members == user_key).fetch()
 
@@ -102,14 +97,10 @@ class account(ndb.Model):
 			'photo' : self.photo,
 			'photo_url' : self.photo_url,
 			'created_count' : self.created_count,
-			# 'eventsEntries': [p.custom_to_dict() for p in query_result],  # mostafa
-			'events_entries': [p.get().custom_to_dict() for p in user_events if p.get() != None],  # idan
-			'events_edited': [p.get().custom_to_dict() for p in query_events_edited if p.get() != None],
+			'events_entries': [p.get().custom_to_dict() for p in user_events if p.get() != None],
 			'events_wait4approval': [p.get().custom_to_dict() for p in query_events_wait4approval if p.get() != None],
 			'events_decline': [p.get().custom_to_dict() for p in query_events_decline if p.get() != None],
-			'events_history': [p.get().custom_to_dict() for p in query_events_history if p.get() != None]
-
 			# add for user profile
-			# 'favourites' : self.favourites, #Todo
+			'favourites': [key.id() for key in self.favourites]
 		}
 
