@@ -165,7 +165,7 @@ def join_event(request):  # Todo 7.7 update according to new DB
 
 	if event_to_update.members_count == int(event_to_update.max_attend):  # notify about closed event
 		send_notifcation_to_user(notification_token,
-								 "{0} event is full!".format(event_id.name),
+								 "{0} event is full!".format(event_to_update.name),
 								 "Click here to view the event",
 								 event_to_update.custom_to_dict())
 
@@ -382,7 +382,44 @@ def request_join_event(request):
 	event_to_update.put()
 	return HttpResponse(create_response(OK, []))
 
-# def resolve_join_request_response()
+@csrf_exempt
+@login_required
+def resolve_join_request_response(request):
+	TAG = 'RESOLVE_JOIN_REQUEST_RESPONSE: '
+	try:
+		body = json.loads(request.body)
+		token       = body['token']
+		user_id     = body['user_id']
+		event_id    = body['event_id']
+		join_status = int(body['join_status'])
+	except:
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
+	user_to_update = ndb.Key('account', int(user_id)).get()
+	event_to_update = ndb.Key('event', int(event_id)).get()
+	event_key = ndb.Key('event', int(event_id))
+	notification_token = user_to_update.notifications_token
+	if join_status:
+		# delete from wait4approval list
+		user_event_list = user_to_update.events_wait4approval
+		if event_key in user_event_list:
+			idx = user_event_list.index(event_key)
+			user_event_list[idx].delete()
+		# add to user events
+		user_to_update.events.append(event_key)
+		send_notifcation_to_user(notification_token,
+							 "Your join request has been accepted",
+							 "Click here to view the event..",
+							 event_to_update.custom_to_dict())
+	else:
+		send_notifcation_to_user(notification_token,
+							 "Your join request has been declined",
+							 "Click here to view the event..",
+							 event_to_update.custom_to_dict())
 
-
-
+	# remove from sender approve list
+	event_approve_list = event_to_update.approve_list
+	if event_key in event_approve_list:
+		idx = event_approve_list.index(event_key)
+		event_approve_list[idx].delete()
+	event_to_update.put()
+	user_to_update.put()

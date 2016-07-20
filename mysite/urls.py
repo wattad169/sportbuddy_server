@@ -45,7 +45,12 @@ urlpatterns = [
 	url(r'^cron/event_refresher/',event_refresher),
 	url(r'^cron/update_events_by_scheme/',update_events_by_scheme),
 	url(r'^cron/resolve_kick_of_events/',resolve_kick_of_events),
-	url(r'^request_join_event/',request_join_event)
+	url(r'^request_join_event/',request_join_event),
+	url(r'^resolve_join_request_response/',resolve_join_request_response)
+
+
+
+
 
 
 
