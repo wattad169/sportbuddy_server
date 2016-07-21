@@ -43,11 +43,13 @@ def send_notifcation_to_user(notifcation_token,title,message,moreParams=None):
 	body['data'] =  notifcation
 	body['to'] = notifcation_token
 	headers = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':'key='+SERVER_API_KEY}
-	conn.request('POST', '/gcm/send', json.dumps(body), headers)
-	response = conn.getresponse()
-
-	logging.info('%s Sent data:\n%s\nResponse Status: %s\nResponse msg: %s',TAG,str(body),response.status,response.read())
-
+	user_to_send = account.query(account.notifications_token == notifcation_token).get()
+	if user_to_send.send_notfications == "1":
+		conn.request('POST', '/gcm/send', json.dumps(body), headers)
+		response = conn.getresponse()
+		logging.info('%s Sent data:\n%s\nResponse Status: %s\nResponse msg: %s',TAG,str(body),response.status,response.read())
+	else:
+		logging.info("User is not subscribed to notifications")
 def login_required(f):
 	def wrapper(*args, **kw):
 		TAG = "LOGIN_REQUIRED: "

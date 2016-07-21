@@ -80,3 +80,12 @@ def update_events_by_scheme(request):
 	for iter_event in all_events:
 		iter_event.put()
 	return HttpResponse(create_response(OK, []))
+
+
+@csrf_exempt
+def update_users_by_scheme(request):
+	TAG = 'UPDATE_ALL_BY_SCHEME'
+	all_users = account.query().fetch()
+	for iter_user in all_users:
+		iter_user.put()
+	return HttpResponse(create_response(OK, []))

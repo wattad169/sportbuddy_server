@@ -69,8 +69,6 @@ class account(ndb.Model):
 	email = ndb.StringProperty(required=True)
 	password = ndb.StringProperty()
 	events = ndb.KeyProperty(repeated=True, kind='event')  # accepted events in the future
-
-
 	events_wait4approval = ndb.KeyProperty(repeated=True,
 										   kind='event')  # After i join to event, i wait for the creator approval
 	events_decline = ndb.KeyProperty(repeated=True,
@@ -79,6 +77,7 @@ class account(ndb.Model):
 	created_count = ndb.StringProperty(required=True, default="0")
 	favourites = ndb.KeyProperty(repeated=True,
 								 kind='account')  # favourites for the user (watch their events)#todo insert when we create account
+	send_notfications = ndb.StringProperty(default="1")
 
 	def custom_to_dict(self):
 		"""for user"""

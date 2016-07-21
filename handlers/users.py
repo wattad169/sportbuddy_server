@@ -118,3 +118,21 @@ def add_to_favourites(request):
 @csrf_exempt
 def remove_from_favourites(request):
 	pass
+
+@csrf_exempt
+@login_required
+def subscribe_for_notificaions(request):
+	TAG = 'UNSUBSCRIBE_FOR_NOTIFICATIONS: '
+	try:
+		body = json.loads(request.body)
+		result = {}
+		user_id = body['token']
+		subscribe_bit = body['subscribe_bit']
+	except:
+		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
+		return HttpResponseBadRequest()
+
+	my_account = ndb.Key('account', int(user_id)).get()
+	my_account.send_notfications = subscribe_bit
+	my_account.put()
+	return HttpResponse(create_response(OK, []))
