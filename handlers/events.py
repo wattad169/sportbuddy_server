@@ -71,7 +71,7 @@ def get_all_events(request):
 		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
 
-	query_result = event.query().fetch()
+	query_result = event.query(event.status != EXPIRED_EVENT).fetch()
 	return HttpResponse(create_response(OK, [p.custom_to_dict() for p in query_result]))
 
 
@@ -132,16 +132,11 @@ def join_event(request):
 		logging.error('%sReceived inappropriate request %s', TAG, str(request.body))
 		return HttpResponseBadRequest()
 
-
-
-	# adding the user token to the given event
 	event_to_update = ndb.Key('event', int(event_id)).get()
-	event_to_update.members.append(ndb.Key('account', int(token)))
-	event_to_update.put()
-	# adding the event to the user events
 	user_to_update = ndb.Key('account', int(token)).get()  # retrieve the relevant account entity
-	user_to_update.events.append(ndb.Key('event', int(event_id)))
-	user_to_update.put()
+
+	if event_to_update.members_count == int(event_to_update.max_attend):  # notify about closed event
+		return HttpResponse(create_response(NOK, event_to_update.custom_to_dict()))
 
 	created_by_user = event_to_update.created_by.id()
 	created_user = ndb.Key('account', int(created_by_user)).get()
@@ -151,6 +146,20 @@ def join_event(request):
 							 "{0} joined your event!".format(user_first_name),
 							 "More details..",
 							 event_to_update.custom_to_dict())
+	if event_to_update.members_count == int(event_to_update.max_attend):  # notify about closed event
+		send_notifcation_to_user(notification_token,
+								 "{0} event is full!".format(event_to_update.name),
+								 "",
+								 event_to_update.custom_to_dict())
+
+	# adding the user token to the given event
+	event_to_update.members.append(ndb.Key('account', int(token)))
+	event_to_update.put()
+	# adding the event to the user events
+	user_to_update.events.append(ndb.Key('event', int(event_id)))
+	user_to_update.put()
+
+
 
 	if event_to_update.members_count == int(event_to_update.max_attend):  # notify about closed event
 		send_notifcation_to_user(notification_token,
