@@ -152,12 +152,14 @@ def join_event(request):
 								 "",
 								 event_to_update.custom_to_dict())
 
-	# adding the user token to the given event
-	event_to_update.members.append(ndb.Key('account', int(token)))
-	event_to_update.put()
-	# adding the event to the user events
-	user_to_update.events.append(ndb.Key('event', int(event_id)))
-	user_to_update.put()
+	if ndb.Key('account', int(token)) not in event_to_update.members:
+		# adding the user token to the given event
+		event_to_update.members.append(ndb.Key('account', int(token)))
+		event_to_update.put()
+	if ndb.Key('event', int(event_id)) not in user_to_update.events:
+		# adding the event to the user events
+		user_to_update.events.append(ndb.Key('event', int(event_id)))
+		user_to_update.put()
 
 
 
