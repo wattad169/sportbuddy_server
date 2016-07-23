@@ -71,9 +71,9 @@ def invite_user_to_event(request):
 	inviter = ndb.Key('account', int(token)).get()
 	invitee = ndb.Key('account', int(invitee)).get()
 	event = ndb.Key('event', int(event_id)).get()
-	invitee_first_name = inviter.fullname[:invitee.fullname.find("%")]
+	invitee_first_name = inviter.fullname[:inviter.fullname.find("%")]
 	send_notifcation_to_user(invitee.notifications_token,
-	                         "{0} invited you to join {0}".format(invitee_first_name,event.name),
+	                         "{0} invited you to join event".format(invitee_first_name),
 	                        "Click here to join the event!",
 	                         event.custom_to_dict()
 	                        )
