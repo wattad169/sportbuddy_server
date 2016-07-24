@@ -61,9 +61,14 @@ def resolve_kick_of_events(request):
 		for event_member_key in iter_event.members:
 			event_member = ndb.Key('account',int(event_member_key.id())).get()
 			try:
+				if iter_event.members_count < int(iter_event.min_attend):  # notify about closed event
+					notify_str = "Your event didn't reach minimum required attendance!"
+				else:
+					notify_str = "Less than an hour til we kick off!"
+
 				send_notifcation_to_user(event_member.notifications_token,
-											 "{0} Less than an hour til we kick off!".format(iter_event.name),
-											 "Click here to view the event",
+											 notify_str,
+											 "",
 											 iter_event.custom_to_dict())
 			except Exception as e:
 				logging.debug("trying to send notification to user {0} failed\nExcetpions:\n{1}".format(int(event_member_key.id()),e))
